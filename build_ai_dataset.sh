@@ -117,7 +117,7 @@ if ! is_done commoncrawl; then
       -o wet.paths.gz
 
     # PIPEFAIL-SAFE VERSION (NO HEAD)
-    gzip -dc wet.paths.gz | sed -n '1,2000p' > wet_sample.txt
+    gzip -dc wet.paths.gz | sed -n '1,100p' > wet_sample.txt
     rm -f wet.paths.gz
   fi
 
@@ -278,7 +278,7 @@ if ! is_done hotdupes; then
   fi
 
   echo "  Creating 100 duplicates..."
-  for i in {1..100}; do
+  for i in {1..10}; do
     target="$ROOT/synthetic/hot_duplicates/dup_$i.txt"
     if [ ! -f "$target" ]; then
       cp "$ROOT/synthetic/hot_duplicates/base.txt" "$target"
@@ -306,7 +306,7 @@ if ! is_done neardupes; then
 
   mkdir -p "$ROOT/synthetic/near_dupes"
 
-  for i in {1..50}; do
+  for i in {1..5}; do
     target="$ROOT/synthetic/near_dupes/variant_$i.txt"
 
     if [ ! -f "$target" ]; then
@@ -347,8 +347,9 @@ fi
 ########################################
 
 if ! is_done appendlogs; then
-  echo "Creating progressive append-only logs..."
+  echo "Creating append-only logs..."
 
+  # Validate dependency
   WEB_FILE="$ROOT/web/combined_web.txt"
   if [ ! -f "$WEB_FILE" ] || [ ! -s "$WEB_FILE" ]; then
     echo "ERROR: $WEB_FILE not found or empty. Common Crawl stage must complete first."
@@ -357,22 +358,16 @@ if ! is_done appendlogs; then
 
   mkdir -p "$ROOT/synthetic/append_logs"
 
-  prev="$WEB_FILE"
-
-  for i in {1..20}; do
+  for i in {1..5}; do
     target="$ROOT/synthetic/append_logs/log_$i.txt"
 
     if [ ! -f "$target" ]; then
-      echo "  Creating log file $i from previous..."
-
-      cp "$prev" "$target"
-
+      echo "  Creating log file $i..."
+      cp "$WEB_FILE" "$target"
       for j in {1..10}; do
-        echo "LOG ENTRY file=$i entry=$j" >> "$target"
+        echo "LOG ENTRY $j" >> "$target"
       done
     fi
-
-    prev="$target"
   done
 
   checkpoint appendlogs
@@ -381,11 +376,11 @@ else
 fi
 
 ########################################
-# 7. AI MODELS (~50GB)
+# 7. AI MODELS
 ########################################
 
 if ! is_done aimodels; then
-  echo "Downloading AI models (~50GB, this will take a while)..."
+  echo "Downloading AI models (this will take a while)..."
 
   mkdir -p "$ROOT/models"
 
@@ -398,8 +393,6 @@ if ! is_done aimodels; then
   # Define models to download
   # Format: "repo_id|description"
   MODELS=(
-    "mistralai/Mistral-7B-v0.1|Mistral 7B base model"
-    "meta-llama/Llama-2-7b-hf|Llama 2 7B model"
     "openai/clip-vit-large-patch14|CLIP ViT-L/14"
     "bert-large-uncased|BERT Large Uncased"
   )
@@ -415,7 +408,7 @@ if ! is_done aimodels; then
 
     # Check if already downloaded
     if [ -f "$checkpoint_file" ]; then
-      echo "✓ $description ($repo_id) already downloaded"
+      echo "$description ($repo_id) already downloaded"
       continue
     fi
 
@@ -430,9 +423,9 @@ if ! is_done aimodels; then
 
       # Mark as downloaded
       touch "$checkpoint_file"
-      echo "✓ Downloaded $description"
+      echo "Downloaded $description"
     else
-      echo "⚠ Warning: Failed to download $description, skipping..."
+      echo "Warning: Failed to download $description, skipping..."
       # Mark as done anyway to skip in future runs (may be gated/access restricted)
       touch "$checkpoint_file"
     fi
