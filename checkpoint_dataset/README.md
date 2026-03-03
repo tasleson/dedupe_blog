@@ -1,4 +1,20 @@
 Running create should create and dump out the numbers we are looking for.
 
-This currently requires functional cuda hardware and software.
-With a RTX 5070 this takes ~ 27 minutes to complete and consumes ~29G of persistent storage.
+## Requirements
+
+### Hardware
+- CUDA-compatible GPU (required)
+- ~29GB free disk space
+
+### Software
+- Python 3.x
+- CUDA toolkit and drivers
+- Python packages (see requirements.txt):
+  - torch (with CUDA support)
+  - transformers
+  - datasets
+  - numpy
+  - tqdm
+
+## Performance Reference
+- **RTX 5070**: ~27 minutes runtime, ~29GB storage
